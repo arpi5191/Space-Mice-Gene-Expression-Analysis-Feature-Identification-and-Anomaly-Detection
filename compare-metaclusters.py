@@ -25,6 +25,5 @@ def main(inFile = None):
 
     theMetaClusters.getClusters(clusterNum1, clusterNum2)
 
-
 if __name__ == "__main__":
     main("breast-cancer-wisconsin.data.csv")
