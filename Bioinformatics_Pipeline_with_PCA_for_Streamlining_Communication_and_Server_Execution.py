@@ -20,6 +20,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.compose import TransformedTargetRegressor
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
 
 
@@ -81,6 +82,7 @@ pipe = Pipeline(steps=[
     ("scaler", StandardScaler()),
     ("kbest", SelectKBest(f_classif, k=1000)),
     ("pca", PCA(n_components=2)),
+    # ("gb", GradientBoostingClassifier()),
     ("logistic", LogisticRegression(max_iter=10000, tol=0.1)),
     # ("rf", RandomForestClassifier(n_estimators=100)),
 ], verbose=2)
