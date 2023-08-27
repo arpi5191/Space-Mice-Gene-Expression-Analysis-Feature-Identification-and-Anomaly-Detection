@@ -203,4 +203,3 @@ print('Accuracy score:', accuracy)
 
 # Command
 #sys.path.append(f'{os.getcwd()}/substrait-ml')
-
