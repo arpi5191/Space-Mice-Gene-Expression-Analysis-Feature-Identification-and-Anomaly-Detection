@@ -116,83 +116,54 @@ param_grid = {
 # This can help you find the best combination of hyperparameters for your specific problem.
 grid_search = GridSearchCV(pipe, param_grid=param_grid, cv=2)
 
+# Peform Fitting
 pipe.fit(X, y)
 
+# Imports for the Next Part of Code
 from sklearn.pipeline import Pipeline
 from ibis.expr.types import Table
 from sklearn.linear_model import LogisticRegression
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-# from sklearn_ibis.linear_model import LogisticRegressionIbis
-# from sklearn_ibis.decomposition import PCAIbis
-# from sklearn_ibis.preprocessing import StandardScalerIbis
-# from sklearn_ibis.ibis.ibis_transformer import IbisTransformer
-#
-#
-# class PipelineIbis:
-#     def __init__(self, wrapped: Pipeline):
-#         self.steps = wrapped.steps
-#
-#     def to_ibis(self):
-#         def fn(table: Table):
-#
-#             for step in self.steps:
-#                 step = step[1]
-#
-#                 if isinstance(step, StandardScaler):
-#                     wrapper = StandardScalerIbis(step)
-#                 elif isinstance(step, LogisticRegression):
-#                     wrapper = LogisticRegressionIbis(step)
-#                 elif isinstance(step, PCA):
-#                     wrapper = PCAIbis(step)
-#                 elif isinstance(step, IbisTransformer):
-#                     wrapper = step
-#                 else:
-#                     raise Exception(f"No Ibis implemntation found for {type(step)}")
-#
-#                 table = wrapper.to_ibis()(table)
-#
-#             return table
-#
-#         return fn
+from sklearn_ibis.linear_model import LogisticRegressionIbis
+from sklearn_ibis.decomposition import PCAIbis
+from sklearn_ibis.preprocessing import StandardScalerIbis
+from sklearn_ibis.ibis.ibis_transformer import IbisTransformer
 
+# Function to Connect Pipeline to Ibis
 class PipelineIbis:
     def __init__(self, wrapped: Pipeline):
         self.steps = wrapped.steps
 
     def to_ibis(self):
-        def fn(table):
+        def fn(table: Table):
 
             for step in self.steps:
                 step = step[1]
 
                 if isinstance(step, StandardScaler):
-                    wrapper = step.fit_transform(table)
-                    # wrapper = StandardScaler(step)
-                    print("HELLO")
-                elif isinstance(step, SelectKBest):
-                    wrapper = SelectKBest(step)
-                elif isinstance(step, PCA):
-                    wrapper = PCA(step)
+                    wrapper = StandardScalerIbis(step)
                 elif isinstance(step, LogisticRegression):
-                    wrapper = LogisticRegression(step)
-                    table = wrapper.to_ibis()(table)
+                    wrapper = LogisticRegressionIbis(step)
+                elif isinstance(step, PCA):
+                    wrapper = PCAIbis(step)
+                elif isinstance(step, IbisTransformer):
+                    wrapper = step
                 else:
-                    raise Exception(f"No Ibis implementation found for {type(step)}")
+                    raise Exception(f"No Ibis implemntation found for {type(step)}")
 
-                # table = wrapper.to_ibis()(table)
+                table = wrapper.to_ibis()(table)
 
             return table
 
         return fn
 
-# t = ibis.memtable(dataInfo, name="The_Impact_of_Space_on_Mice")
+# Create Memtable
 t = ibis.memtable(dataInfo)
-# t = ibis.array(t)
 t = t.drop("gene")
 
+# Pass the Pipeline Through the Function To Connect to Ibis
 pipeline = PipelineIbis(pipe)
-print("HI HOW ARE YOU?")
 result = pipeline.to_ibis()(t)
 
 # Get the kbest object
@@ -205,13 +176,14 @@ all_feature_names = dataInfo.columns.tolist()
 selected_feature_names = [all_feature_names[i] for i in range(min(len(selected_mask), len(all_feature_names)))
                           if selected_mask[i]]
 
+# Obtain the PCA Variance Ratio, PCA Steps, Logistic Steps, Logistic Coefficients, Logistic Intercept
 pca = pipe.named_steps["pca"]
 variances = pca.explained_variance_ratio_
-
 logistic = pipe.named_steps['logistic']
 coefficients = logistic.coef_
 intercept = logistic.intercept_
 
+# Predict Y-Value and Accuracy
 y_pred = pipe.predict(X)
 accuracy = accuracy_score(y, y_pred)
 
@@ -231,3 +203,4 @@ print('Accuracy score:', accuracy)
 
 # Command
 #sys.path.append(f'{os.getcwd()}/substrait-ml')
+
